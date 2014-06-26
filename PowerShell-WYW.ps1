@@ -186,3 +186,19 @@ $wshell.Popup("Program Files Dir is: " + $ProgramFilesDir ,2,"2 seconds time out
 $Key2 = "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment"
 $SystemPath = (Get-ItemProperty -Path $key2 -Name Path).Path
 $wshell.Popup("System Path is: " + $SystemPath ,2,"2 seconds time out",0x0 + 0x40 + 4096)
+
+# another way to read registry
+$key3 = (Get-Itemproperty hklm:software\microsoft\windows\currentversion).ProgramFilesDir
+$wshell.Popup("Program Files Dir is (method 2): " + $key3 ,2,"2 seconds time out",0x0 + 0x40 + 4096)
+
+$key4 = (Get-ItemProperty "HKLM:\System\CurrentControlSet\Control\Session Manager\Environment").Path
+$wshell.Popup("System Path is (method 2): " + $key4 ,2,"2 seconds time out",0x0 + 0x40 + 4096)
+
+# Creating Keys
+New-Item -Path hkcu:\software\_DeleteMe
+# Creating Keys (with space)
+New-Item -Path "hkcu:\software\_Delete Me"
+# Deleting Keys
+Remove-Item -Path hkcu:\Software\_DeleteMe
+# Deleting Keys (with space)
+Remove-Item -Path "hkcu:\software\_Delete Me"
