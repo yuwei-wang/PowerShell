@@ -10,8 +10,26 @@ Write-Host
 #########################################################
 #########################################################
 #########################################################
-$wshell = New-Object -ComObject Wscript.Shell
 
+### *********** Function *********** ###
+Function Get-FileName($initialDirectory)
+{   
+ [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") |
+ Out-Null
+
+ $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+ $OpenFileDialog.initialDirectory = $initialDirectory
+ $OpenFileDialog.filter = "All files (*.*)| *.*"
+ $OpenFileDialog.ShowDialog() | Out-Null
+ $OpenFileDialog.filename
+} #end function Get-FileName
+### *********** Function *********** ###
+
+
+
+
+
+$wshell = New-Object -ComObject Wscript.Shell
 
 $ObjComputerInfo = get-wmiobject Win32_ComputerSystem
 $Manufacturer = $ObjComputerInfo.Manufacturer
@@ -26,9 +44,15 @@ Write-Host -foregroundcolor "magenta" Ram:`t`t $Memory GB
 $Date = Get-Date -Format "MM/dd/yyyy"
 Write-Host -foregroundcolor "magenta" Date:`t`t $Date
 
-Import-Module "C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\Deployment Tools\amd64\DISM"
-$WindowsEdition = (Get-WindowsEdition -Online).Edition
-Write-Host -foregroundcolor "magenta" Windows Edition: $WindowsEdition
+$CheckWindowsOrWinpe = (Get-Itemproperty "HKLM:\Software\Microsoft\Windows NT\currentversion").EditionID
+
+IF (-Not ($CheckWindowsOrWinpe -eq "WindowsPE")) {
+	Import-Module "C:\Program Files (x86)\Windows Kits\8.1\Assessment and Deployment Kit\Deployment Tools\amd64\DISM"
+	$WindowsEdition = (Get-WindowsEdition -Online).Edition
+	Write-Host -foregroundcolor "magenta" Windows Edition: $WindowsEdition
+} ELSE {
+	$wshell.Popup("EditionID: " + $CheckWindowsOrWinpe,1,"EditionID",0x0 + 0x40 + 4096)
+}
 
 Write-Host
 
@@ -160,20 +184,6 @@ Line 10
 
 	##########################
 
-	Function Get-FileName($initialDirectory)
-	{   
-	 [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") |
-	 Out-Null
-
-	 $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
-	 $OpenFileDialog.initialDirectory = $initialDirectory
-	 $OpenFileDialog.filter = "All files (*.*)| *.*"
-	 $OpenFileDialog.ShowDialog() | Out-Null
-	 $OpenFileDialog.filename
-	} #end function Get-FileName
-
-	# *** Entry Point to Script ***
-
 	#$WimFile = Get-FileName -initialDirectory ""
 	$WimFile = Get-FileName -initialDirectory "X:\"
 
@@ -259,5 +269,28 @@ IF (Test-Path "hkcu:\software\_Delete Me")
 	Remove-Item -Path "hkcu:\software\_Delete Me"
 	
 }
+
+$NameOfWimFile = Get-FileName -initialDirectory "X:\"
+
+IF ($NameOfWimFile) {
+	IF(Test-Path $NameOfWimFile)
+	{
+		Write-Host $NameOfWimFile exists.
+		$wshell.Popup("The file is: " + $NameOfWimFile,2,"Name",0x0)
+	} ELSE {
+		Write-Host $NameOfWimFile not exists.
+	}
+} ELSE {
+	Write-Host You did not choose a file.
+	$wshell.Popup("You did not choose a file",0,"Error",0x0)
+}
+
+Get-WindowsImage -ImagePath $NameOfWimFile
+
+
+#$aaa = "1234"
+#$wshell.Popup($aaa.GetType,0,"xxxxxxxxx",0x0)
+#$aaa.GetType
+#################################################################################
 
 
